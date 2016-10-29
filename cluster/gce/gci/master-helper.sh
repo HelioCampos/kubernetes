@@ -64,7 +64,7 @@ function create-master-instance-internal() {
   gcloud compute instances create "${master_name}" \
     ${address_option} \
     --project "${PROJECT}" \
-    --zone "${ZONE}" \
+    --zones "${ZONE}" \
     --machine-type "${MASTER_SIZE}" \
     --image-project="${MASTER_IMAGE_PROJECT}" \
     --image "${MASTER_IMAGE}" \
@@ -84,6 +84,6 @@ function get-metadata() {
   local key="${3}"
   gcloud compute ssh "${name}" \
     --project "${PROJECT}" \
-    --zone "${zone}" \
+    --zones "${zone}" \
     --command "curl \"http://metadata.google.internal/computeMetadata/v1/instance/attributes/${key}\" -H \"Metadata-Flavor: Google\"" 2>/dev/null
 }

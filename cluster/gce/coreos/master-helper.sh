@@ -42,7 +42,7 @@ function create-master-instance() {
   gcloud compute instances create "${MASTER_NAME}" \
     ${address_opt} \
     --project "${PROJECT}" \
-    --zone "${ZONE}" \
+    --zones "${ZONE}" \
     --machine-type "${MASTER_SIZE}" \
     --image-project="${MASTER_IMAGE_PROJECT}" \
     --image "${MASTER_IMAGE}" \

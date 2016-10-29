@@ -326,7 +326,7 @@ function detect-node-names() {
   if [[ -n "${INSTANCE_GROUPS[@]:-}" ]]; then
     for group in "${INSTANCE_GROUPS[@]}"; do
       NODE_NAMES+=($(gcloud compute instance-groups managed list-instances \
-        "${group}" --zone "${ZONE}" --project "${PROJECT}" \
+        "${group}" --zones "${ZONE}" --project "${PROJECT}" \
         --format='value(instance)'))
     done
   fi
@@ -346,7 +346,7 @@ function detect-nodes() {
   detect-node-names
   KUBE_NODE_IP_ADDRESSES=()
   for (( i=0; i<${#NODE_NAMES[@]}; i++)); do
-    local node_ip=$(gcloud compute instances describe --project "${PROJECT}" --zone "${ZONE}" \
+    local node_ip=$(gcloud compute instances describe --project "${PROJECT}" --zones "${ZONE}" \
       "${NODE_NAMES[$i]}" --format='value(networkInterfaces[0].accessConfigs[0].natIP)')
     if [[ -z "${node_ip-}" ]] ; then
       echo "Did not find ${NODE_NAMES[$i]}" >&2
@@ -395,7 +395,7 @@ function detect-master() {
 #   ZONE
 function get-master-env() {
   # TODO(zmerlynn): Make this more reliable with retries.
-  gcloud compute --project ${PROJECT} ssh --zone ${ZONE} ${KUBE_MASTER} --command \
+  gcloud compute --project ${PROJECT} ssh --zones ${ZONE} ${KUBE_MASTER} --command \
     "curl --fail --silent -H 'Metadata-Flavor: Google' \
       'http://metadata/computeMetadata/v1/instance/attributes/kube-env'" 2>/dev/null
 }
@@ -549,7 +549,7 @@ function add-instance-metadata() {
   while true; do
     if ! gcloud compute instances add-metadata "${instance}" \
       --project "${PROJECT}" \
-      --zone "${ZONE}" \
+      --zones "${ZONE}" \
       --metadata "${kvs[@]}"; then
         if (( attempt > 5 )); then
           echo -e "${color_red}Failed to add instance metadata in ${instance} ${color_norm}" >&2
@@ -577,7 +577,7 @@ function add-instance-metadata-from-file() {
     echo "${kvs[@]}"
     if ! gcloud compute instances add-metadata "${instance}" \
       --project "${PROJECT}" \
-      --zone "${ZONE}" \
+      --zones "${ZONE}" \
       --metadata-from-file "$(join_csv ${kvs[@]})"; then
         if (( attempt > 5 )); then
           echo -e "${color_red}Failed to add instance metadata in ${instance} ${color_norm}" >&2
@@ -741,7 +741,7 @@ function create-master() {
   # run this in the foreground.
   gcloud compute disks create "${MASTER_NAME}-pd" \
     --project "${PROJECT}" \
-    --zone "${ZONE}" \
+    --zones "${ZONE}" \
     --type "${MASTER_DISK_TYPE}" \
     --size "${MASTER_DISK_SIZE}"
 
@@ -749,7 +749,7 @@ function create-master() {
   if [[ "${ENABLE_CLUSTER_REGISTRY}" == true && -n "${CLUSTER_REGISTRY_DISK}" ]]; then
     gcloud compute disks create "${CLUSTER_REGISTRY_DISK}" \
       --project "${PROJECT}" \
-      --zone "${ZONE}" \
+      --zones "${ZONE}" \
       --type "${CLUSTER_REGISTRY_DISK_TYPE_GCE}" \
       --size "${CLUSTER_REGISTRY_DISK_SIZE}" &
   fi
@@ -803,7 +803,7 @@ function add-replica-to-etcd() {
   local -r internal_port="${2}"
   gcloud compute ssh "${EXISTING_MASTER_NAME}" \
     --project "${PROJECT}" \
-    --zone "${EXISTING_MASTER_ZONE}" \
+    --zones "${EXISTING_MASTER_ZONE}" \
     --command \
       "curl localhost:${client_port}/v2/members -XPOST -H \"Content-Type: application/json\" -d '{\"peerURLs\":[\"http://${REPLICA_NAME}:${internal_port}\"]}'"
   return $?
@@ -844,7 +844,7 @@ function replicate-master() {
   # run this in the foreground.
   gcloud compute disks create "${REPLICA_NAME}-pd" \
     --project "${PROJECT}" \
-    --zone "${ZONE}" \
+    --zones "${ZONE}" \
     --type "${MASTER_DISK_TYPE}" \
     --size "${MASTER_DISK_SIZE}"
 
@@ -857,7 +857,7 @@ function replicate-master() {
   # Add new replica to the load balancer.
   gcloud compute target-pools add-instances "${MASTER_NAME}" \
     --project "${PROJECT}" \
-    --zone "${ZONE}" \
+    --zones "${ZONE}" \
     --instances "${REPLICA_NAME}"
 }
 
@@ -872,18 +872,18 @@ function attach-external-ip() {
   local ZONE=${2}
   local IP_ADDR=${3:-}
   local ACCESS_CONFIG_NAME=$(gcloud compute instances describe "${NAME}" \
-    --project "${PROJECT}" --zone "${ZONE}" \
+    --project "${PROJECT}" --zones "${ZONE}" \
     --format="value(networkInterfaces[0].accessConfigs[0].name)")
   gcloud compute instances delete-access-config "${NAME}" \
-    --project "${PROJECT}" --zone "${ZONE}" \
+    --project "${PROJECT}" --zones "${ZONE}" \
     --access-config-name "${ACCESS_CONFIG_NAME}"
   if [[ -z ${IP_ADDR} ]]; then
     gcloud compute instances add-access-config "${NAME}" \
-      --project "${PROJECT}" --zone "${ZONE}" \
+      --project "${PROJECT}" --zones "${ZONE}" \
       --access-config-name "${ACCESS_CONFIG_NAME}"
   else
     gcloud compute instances add-access-config "${NAME}" \
-      --project "${PROJECT}" --zone "${ZONE}" \
+      --project "${PROJECT}" --zones "${ZONE}" \
       --access-config-name "${ACCESS_CONFIG_NAME}" \
       --address "${IP_ADDR}"
   fi
@@ -916,7 +916,7 @@ function create-loadbalancer() {
   # Step 2: Create target pool.
   gcloud compute target-pools create "${MASTER_NAME}" --region "${REGION}"
   # TODO: We should also add master instances with suffixes
-  gcloud compute target-pools add-instances ${MASTER_NAME} --instances ${MASTER_NAME} --zone ${EXISTING_MASTER_ZONE}
+  gcloud compute target-pools add-instances ${MASTER_NAME} --instances ${MASTER_NAME} --zones ${EXISTING_MASTER_ZONE}
 
   # Step 3: Create forwarding rule.
   # TODO: This step can take up to 20 min. We need to speed this up...
@@ -1012,13 +1012,13 @@ function create-nodes() {
     gcloud compute instance-groups managed \
         create "${group_name}" \
         --project "${PROJECT}" \
-        --zone "${ZONE}" \
+        --zones "${ZONE}" \
         --base-instance-name "${group_name}" \
         --size "${this_mig_size}" \
         --template "$template_name" || true;
     gcloud compute instance-groups managed wait-until-stable \
         "${group_name}" \
-        --zone "${ZONE}" \
+        --zones "${ZONE}" \
         --project "${PROJECT}" || true;
   done
 }
@@ -1165,7 +1165,7 @@ function remove-replica-from-etcd() {
   local -r port="${1}"
   gcloud compute ssh "${EXISTING_MASTER_NAME}" \
     --project "${PROJECT}" \
-    --zone "${EXISTING_MASTER_ZONE}" \
+    --zones "${EXISTING_MASTER_ZONE}" \
     --command \
     "curl -s localhost:${port}/v2/members/\$(curl -s localhost:${port}/v2/members -XGET | sed 's/{\\\"id/\n/g' | grep ${REPLICA_NAME}\\\" | cut -f 3 -d \\\") -XDELETE -L 2>/dev/null"
   local -r res=$?
@@ -1198,11 +1198,11 @@ function kube-down() {
     local templates=$(get-template "${PROJECT}")
 
     for group in ${INSTANCE_GROUPS[@]:-}; do
-      if gcloud compute instance-groups managed describe "${group}" --project "${PROJECT}" --zone "${ZONE}" &>/dev/null; then
+      if gcloud compute instance-groups managed describe "${group}" --project "${PROJECT}" --zones "${ZONE}" &>/dev/null; then
         gcloud compute instance-groups managed delete \
           --project "${PROJECT}" \
           --quiet \
-          --zone "${ZONE}" \
+          --zones "${ZONE}" \
           "${group}" &
       fi
     done
@@ -1231,12 +1231,12 @@ function kube-down() {
   remove-replica-from-etcd 4002
 
   # Delete the master replica (if it exists).
-  if gcloud compute instances describe "${REPLICA_NAME}" --zone "${ZONE}" --project "${PROJECT}" &>/dev/null; then
+  if gcloud compute instances describe "${REPLICA_NAME}" --zones "${ZONE}" --project "${PROJECT}" &>/dev/null; then
     # If there is a load balancer in front of apiservers we need to first update its configuration.
     if gcloud compute target-pools describe "${MASTER_NAME}" --region "${REGION}" --project "${PROJECT}" &>/dev/null; then
       gcloud compute target-pools remove-instances "${MASTER_NAME}" \
         --project "${PROJECT}" \
-        --zone "${ZONE}" \
+        --zones "${ZONE}" \
         --instances "${REPLICA_NAME}"
     fi
     # Now we can safely delete the VM.
@@ -1244,28 +1244,28 @@ function kube-down() {
       --project "${PROJECT}" \
       --quiet \
       --delete-disks all \
-      --zone "${ZONE}" \
+      --zones "${ZONE}" \
       "${REPLICA_NAME}"
   fi
 
   # Delete the master replica pd (possibly leaked by kube-up if master create failed).
   # TODO(jszczepkowski): remove also possibly leaked replicas' pds
   local -r replica_pd="${REPLICA_NAME:-${MASTER_NAME}}-pd"
-  if gcloud compute disks describe "${replica_pd}" --zone "${ZONE}" --project "${PROJECT}" &>/dev/null; then
+  if gcloud compute disks describe "${replica_pd}" --zones "${ZONE}" --project "${PROJECT}" &>/dev/null; then
     gcloud compute disks delete \
       --project "${PROJECT}" \
       --quiet \
-      --zone "${ZONE}" \
+      --zones "${ZONE}" \
       "${replica_pd}"
   fi
 
   # Delete disk for cluster registry if enabled
   if [[ "${ENABLE_CLUSTER_REGISTRY}" == true && -n "${CLUSTER_REGISTRY_DISK}" ]]; then
-    if gcloud compute disks describe "${CLUSTER_REGISTRY_DISK}" --zone "${ZONE}" --project "${PROJECT}" &>/dev/null; then
+    if gcloud compute disks describe "${CLUSTER_REGISTRY_DISK}" --zones "${ZONE}" --project "${PROJECT}" &>/dev/null; then
       gcloud compute disks delete \
         --project "${PROJECT}" \
         --quiet \
-        --zone "${ZONE}" \
+        --zones "${ZONE}" \
         "${CLUSTER_REGISTRY_DISK}"
     fi
   fi
@@ -1325,7 +1325,7 @@ function kube-down() {
         --project "${PROJECT}" \
         --quiet \
         --delete-disks boot \
-        --zone "${ZONE}" \
+        --zones "${ZONE}" \
         "${minions[@]::${batch}}"
       minions=( "${minions[@]:${batch}}" )
     done
@@ -1354,11 +1354,11 @@ function kube-down() {
     done
 
     # Delete persistent disk for influx-db.
-    if gcloud compute disks describe "${INSTANCE_PREFIX}"-influxdb-pd --zone "${ZONE}" --project "${PROJECT}" &>/dev/null; then
+    if gcloud compute disks describe "${INSTANCE_PREFIX}"-influxdb-pd --zones "${ZONE}" --project "${PROJECT}" &>/dev/null; then
       gcloud compute disks delete \
         --project "${PROJECT}" \
         --quiet \
-        --zone "${ZONE}" \
+        --zones "${ZONE}" \
         "${INSTANCE_PREFIX}"-influxdb-pd
     fi
 
@@ -1476,17 +1476,17 @@ function check-resources() {
     return 1
   fi
 
-  if gcloud compute instances describe --project "${PROJECT}" "${MASTER_NAME}" --zone "${ZONE}" &>/dev/null; then
+  if gcloud compute instances describe --project "${PROJECT}" "${MASTER_NAME}" --zones "${ZONE}" &>/dev/null; then
     KUBE_RESOURCE_FOUND="Kubernetes master ${MASTER_NAME}"
     return 1
   fi
 
-  if gcloud compute disks describe --project "${PROJECT}" "${MASTER_NAME}"-pd --zone "${ZONE}" &>/dev/null; then
+  if gcloud compute disks describe --project "${PROJECT}" "${MASTER_NAME}"-pd --zones "${ZONE}" &>/dev/null; then
     KUBE_RESOURCE_FOUND="Persistent disk ${MASTER_NAME}-pd"
     return 1
   fi
 
-  if gcloud compute disks describe --project "${PROJECT}" "${CLUSTER_REGISTRY_DISK}" --zone "${ZONE}" &>/dev/null; then
+  if gcloud compute disks describe --project "${PROJECT}" "${CLUSTER_REGISTRY_DISK}" --zones "${ZONE}" &>/dev/null; then
     KUBE_RESOURCE_FOUND="Persistent disk ${CLUSTER_REGISTRY_DISK}"
     return 1
   fi
@@ -1578,7 +1578,7 @@ function prepare-push() {
       gcloud compute instance-groups managed \
         set-instance-template "${group}" \
         --template "$tmp_template_name" \
-        --zone "${ZONE}" \
+        --zones "${ZONE}" \
         --project "${PROJECT}" || true;
     done
 
@@ -1593,7 +1593,7 @@ function prepare-push() {
       gcloud compute instance-groups managed \
         set-instance-template "${group}" \
         --template "$template_name" \
-        --zone "${ZONE}" \
+        --zones "${ZONE}" \
         --project "${PROJECT}" || true;
     done
 
@@ -1612,7 +1612,7 @@ function push-master() {
   add-instance-metadata-from-file "${KUBE_MASTER}" "kube-env=${KUBE_TEMP}/master-kube-env.yaml" "startup-script=${KUBE_TEMP}/configure-vm.sh"
 
   echo "Pushing to master (log at ${OUTPUT}/push-${KUBE_MASTER}.log) ..."
-  cat ${KUBE_TEMP}/configure-vm.sh | gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --project "${PROJECT}" --zone "${ZONE}" "${KUBE_MASTER}" --command "sudo bash -s -- --push" &> ${OUTPUT}/push-"${KUBE_MASTER}".log
+  cat ${KUBE_TEMP}/configure-vm.sh | gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --project "${PROJECT}" --zones "${ZONE}" "${KUBE_MASTER}" --command "sudo bash -s -- --push" &> ${OUTPUT}/push-"${KUBE_MASTER}".log
 }
 
 # Push binaries to kubernetes node
@@ -1624,7 +1624,7 @@ function push-node() {
   add-instance-metadata-from-file "${node}" "kube-env=${KUBE_TEMP}/node-kube-env.yaml" "startup-script=${KUBE_TEMP}/configure-vm.sh"
 
   echo "Start upgrading node ${node} (log at ${OUTPUT}/push-${node}.log) ..."
-  cat ${KUBE_TEMP}/configure-vm.sh | gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --project "${PROJECT}" --zone "${ZONE}" "${node}" --command "sudo bash -s -- --push" &> ${OUTPUT}/push-"${node}".log
+  cat ${KUBE_TEMP}/configure-vm.sh | gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --project "${PROJECT}" --zones "${ZONE}" "${node}" --command "sudo bash -s -- --push" &> ${OUTPUT}/push-"${node}".log
 }
 
 # Push binaries to kubernetes cluster
@@ -1761,13 +1761,13 @@ function ssh-to-node() {
   local cmd="$2"
   # Loop until we can successfully ssh into the box
   for try in {1..5}; do
-    if gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --ssh-flag="-o ConnectTimeout=30" --project "${PROJECT}" --zone="${ZONE}" "${node}" --command "echo test > /dev/null"; then
+    if gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --ssh-flag="-o ConnectTimeout=30" --project "${PROJECT}" --zones="${ZONE}" "${node}" --command "echo test > /dev/null"; then
       break
     fi
     sleep 5
   done
   # Then actually try the command.
-  gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --ssh-flag="-o ConnectTimeout=30" --project "${PROJECT}" --zone="${ZONE}" "${node}" --command "${cmd}"
+  gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --ssh-flag="-o ConnectTimeout=30" --project "${PROJECT}" --zones="${ZONE}" "${node}" --command "${cmd}"
 }
 
 # Perform preparations required to run e2e tests

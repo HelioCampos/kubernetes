@@ -89,7 +89,7 @@ function upgrade-master() {
   gcloud compute instances delete \
     --project "${PROJECT}" \
     --quiet \
-    --zone "${ZONE}" \
+    --zones "${ZONE}" \
     "${MASTER_NAME}"
 
   create-master-instance "${MASTER_NAME}-ip"
@@ -138,7 +138,7 @@ function prepare-upgrade() {
 #   ZONE
 function get-node-env() {
   # TODO(zmerlynn): Make this more reliable with retries.
-  gcloud compute --project ${PROJECT} ssh --zone ${ZONE} ${NODE_NAMES[0]} --command \
+  gcloud compute --project ${PROJECT} ssh --zones ${ZONE} ${NODE_NAMES[0]} --command \
     "curl --fail --silent -H 'Metadata-Flavor: Google' \
       'http://metadata/computeMetadata/v1/instance/attributes/kube-env'" 2>/dev/null
 }
@@ -152,7 +152,7 @@ function get-node-env() {
 function get-node-os() {
   gcloud compute ssh "$1" \
     --project "${PROJECT}" \
-    --zone "${ZONE}" \
+    --zones "${ZONE}" \
     --command \
     "cat /etc/os-release | grep \"^ID=.*\" | cut -c 4-"
 }
@@ -260,7 +260,7 @@ function do-node-upgrade() {
     echo "== Calling rolling-update for ${group}. ==" >&2
     update=$(gcloud alpha compute rolling-updates \
         --project="${PROJECT}" \
-        --zone="${ZONE}" \
+        --zones="${ZONE}" \
         start \
         --group="${group}" \
         --template="${template_name}" \
@@ -277,7 +277,7 @@ function do-node-upgrade() {
       echo "  All rolling-updates in project ${PROJECT} zone ${ZONE}:"
       gcloud alpha compute rolling-updates \
         --project="${PROJECT}" \
-        --zone="${ZONE}" \
+        --zones="${ZONE}" \
         list || true
       return ${update_rc}
     fi
@@ -292,7 +292,7 @@ function do-node-upgrade() {
     while true; do
       result=$(gcloud alpha compute rolling-updates \
           --project="${PROJECT}" \
-          --zone="${ZONE}" \
+          --zones="${ZONE}" \
           describe \
           ${update} \
           --format='value(status)' || true)
