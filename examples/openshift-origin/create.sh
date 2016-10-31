@@ -106,7 +106,7 @@ sudo -E chown -R ${USER} ${OPENSHIFT_CONFIG}
 
 # The following assumes GCE and that KUBE_GCE_INSTANCE_PREFIX is set
 export ZONE=$(gcloud compute instances list | grep "${KUBE_GCE_INSTANCE_PREFIX}\-master" | awk '{print $2}' | head -1)
-echo "sudo cat /srv/kubernetes/server.key; exit;" | gcloud compute ssh ${KUBE_GCE_INSTANCE_PREFIX}-master --zone ${ZONE} | grep -Ex "(^\-.*\-$|^\S+$)" > ${OPENSHIFT_CONFIG}/serviceaccounts.private.key
+echo "sudo cat /srv/kubernetes/server.key; exit;" | gcloud compute ssh ${KUBE_GCE_INSTANCE_PREFIX}-master --zones ${ZONE} | grep -Ex "(^\-.*\-$|^\S+$)" > ${OPENSHIFT_CONFIG}/serviceaccounts.private.key
 # The following insertion will fail if indentation changes
 sed -i -e 's/publicKeyFiles:.*$/publicKeyFiles:/g' -e '/publicKeyFiles:/a \ \ - serviceaccounts.private.key' ${OPENSHIFT_CONFIG}/master-config.yaml
 

@@ -159,7 +159,7 @@ function kube-up() {
   fi
 
   local shared_args=(
-    "--zone=${ZONE}"
+    "--zones=${ZONE}"
     "--project=${PROJECT}"
     "--scopes=${NODE_SCOPES}"
   )
@@ -222,7 +222,7 @@ function test-setup() {
   detect-nodes >&2
 
   # At this point, CLUSTER_NAME should have been used, so its value is final.
-  NODE_TAG=$($GCLOUD compute instances describe ${NODE_NAMES[0]} --project="${PROJECT}" --zone="${ZONE}" --format='value(tags.items)' | grep -o "gke-${CLUSTER_NAME}-.\{8\}-node")
+  NODE_TAG=$($GCLOUD compute instances describe ${NODE_NAMES[0]} --project="${PROJECT}" --zones="${ZONE}" --format='value(tags.items)' | grep -o "gke-${CLUSTER_NAME}-.\{8\}-node")
   OLD_NODE_TAG="k8s-${CLUSTER_NAME}-node"
 
   # Open up port 80 & 8080 so common containers on minions can be reached.
@@ -259,7 +259,7 @@ function detect-master() {
   echo "... in gke:detect-master()" >&2
   detect-project >&2
   KUBE_MASTER_IP=$("${GCLOUD}" ${CMD_GROUP:-} container clusters describe \
-    --project="${PROJECT}" --zone="${ZONE}" --format='value(endpoint)' \
+    --project="${PROJECT}" --zones="${ZONE}" --format='value(endpoint)' \
     "${CLUSTER_NAME}")
 }
 
@@ -289,7 +289,7 @@ function detect-node-names {
   NODE_NAMES=()
   for group in "${NODE_INSTANCE_GROUPS[@]:-}"; do
     NODE_NAMES+=($(gcloud compute instance-groups managed list-instances \
-      "${group}" --zone "${ZONE}" \
+      "${group}" --zones "${ZONE}" \
       --project "${PROJECT}" --format='value(instance)'))
   done
   echo "NODE_NAMES=${NODE_NAMES[*]:-}"
@@ -313,7 +313,7 @@ function detect-node-names {
 function detect-node-instance-groups {
   echo "... in gke:detect-node-instance-groups()" >&2
   local urls=$("${GCLOUD}" ${CMD_GROUP:-} container clusters describe \
-    --project="${PROJECT}" --zone="${ZONE}" \
+    --project="${PROJECT}" --zones="${ZONE}" \
     --format='value(instanceGroupUrls)' "${CLUSTER_NAME}")
   urls=(${urls//;/ })
   ALL_INSTANCE_GROUP_URLS=${urls[*]}
@@ -339,13 +339,13 @@ function ssh-to-node() {
   local cmd="$2"
   # Loop until we can successfully ssh into the box
   for try in {1..5}; do
-    if gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --ssh-flag="-o ConnectTimeout=30" --project "${PROJECT}" --zone="${ZONE}" "${node}" --command "echo test > /dev/null"; then
+    if gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --ssh-flag="-o ConnectTimeout=30" --project "${PROJECT}" --zones="${ZONE}" "${node}" --command "echo test > /dev/null"; then
       break
     fi
     sleep 5
   done
   # Then actually try the command.
-  gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --ssh-flag="-o ConnectTimeout=30" --project "${PROJECT}" --zone="${ZONE}" "${node}" --command "${cmd}"
+  gcloud compute ssh --ssh-flag="-o LogLevel=quiet" --ssh-flag="-o ConnectTimeout=30" --project "${PROJECT}" --zones="${ZONE}" "${node}" --command "${cmd}"
 }
 
 # Execute after running tests to perform any required clean-up.  This is called
@@ -401,8 +401,8 @@ function test-teardown() {
 function kube-down() {
   echo "... in gke:kube-down()" >&2
   detect-project >&2
-  if "${GCLOUD}" ${CMD_GROUP:-} container clusters describe --project="${PROJECT}" --zone="${ZONE}" "${CLUSTER_NAME}" --quiet &>/dev/null; then
+  if "${GCLOUD}" ${CMD_GROUP:-} container clusters describe --project="${PROJECT}" --zones="${ZONE}" "${CLUSTER_NAME}" --quiet &>/dev/null; then
     "${GCLOUD}" ${CMD_GROUP:-} container clusters delete --project="${PROJECT}" \
-      --zone="${ZONE}" "${CLUSTER_NAME}" --quiet
+      --zones="${ZONE}" "${CLUSTER_NAME}" --quiet
   fi
 }

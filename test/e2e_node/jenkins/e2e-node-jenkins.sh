@@ -43,7 +43,7 @@ TIMEOUT=${TIMEOUT:-"45m"}
 mkdir -p ${ARTIFACTS}
 
 go run test/e2e_node/runner/remote/run_remote.go  --logtostderr --vmodule=*=4 --ssh-env="gce" \
-  --zone="$GCE_ZONE" --project="$GCE_PROJECT" --hosts="$GCE_HOSTS" \
+  --zones="$GCE_ZONE" --project="$GCE_PROJECT" --hosts="$GCE_HOSTS" \
   --images="$GCE_IMAGES" --image-project="$GCE_IMAGE_PROJECT" \
   --image-config-file="$GCE_IMAGE_CONFIG_PATH" --cleanup="$CLEANUP" \
   --results-dir="$ARTIFACTS" --ginkgo-flags="--nodes=$PARALLELISM $GINKGO_FLAGS" \

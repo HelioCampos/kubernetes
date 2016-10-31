@@ -499,7 +499,7 @@ function kube-down {
 #    echo "echo Executing configuration"
 #    echo "sudo salt '*' mine.update"
 #    echo "sudo salt --force-color '*' state.highstate"
-#   ) | gcutil ssh --project "$PROJECT" --zone "$ZONE" "$KUBE_MASTER" sudo bash
+#   ) | gcutil ssh --project "$PROJECT" --zones "$ZONE" "$KUBE_MASTER" sudo bash
 
 #  get-kubeconfig-basicauth
 

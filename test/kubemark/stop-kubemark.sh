@@ -24,7 +24,7 @@ source "${KUBE_ROOT}/test/kubemark/common.sh"
 "${KUBECTL}" delete -f "${RESOURCE_DIRECTORY}/kubemark-ns.json" &> /dev/null || true
 rm -rf "${RESOURCE_DIRECTORY}/addons"
 
-GCLOUD_COMMON_ARGS="--project ${PROJECT} --zone ${ZONE} --quiet"
+GCLOUD_COMMON_ARGS="--project ${PROJECT} --zones ${ZONE} --quiet"
 
 gcloud compute instances delete "${MASTER_NAME}" \
     ${GCLOUD_COMMON_ARGS} || true

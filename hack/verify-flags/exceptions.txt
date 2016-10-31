@@ -19,7 +19,7 @@ cluster/gce/gci/configure-helper.sh:  sed -i -e "s@{{ *storage_backend *}}@${STO
 cluster/gce/gci/configure-helper.sh:  sed -i -e "s@{{pillar\['allow_privileged'\]}}@true@g" "${src_file}"
 cluster/gce/trusty/configure-helper.sh:  sed -i -e "s@{{ *storage_backend *}}@${STORAGE_BACKEND:-}@g" "${temp_file}"
 cluster/gce/trusty/configure-helper.sh:  sed -i -e "s@{{pillar\['allow_privileged'\]}}@true@g" "${src_file}"
-cluster/gce/util.sh:    local node_ip=$(gcloud compute instances describe --project "${PROJECT}" --zone "${ZONE}" \
+cluster/gce/util.sh:    local node_ip=$(gcloud compute instances describe --project "${PROJECT}" --zones "${ZONE}" \
 cluster/juju/layers/kubernetes/reactive/k8s.py:    check_call(split(cmd.format(kubeconfig, cluster_name, server, ca)))
 cluster/juju/layers/kubernetes/reactive/k8s.py:    check_call(split(cmd.format(kubeconfig, context, cluster_name, user)))
 cluster/juju/layers/kubernetes/reactive/k8s.py:    client_key = '/srv/kubernetes/client.key'

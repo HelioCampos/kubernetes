@@ -126,7 +126,7 @@ phabricator-controller-9vy68   1/1       Running   0          1m
 If you ssh to that machine, you can run `docker ps` to see the actual pod:
 
 ```sh
-me@workstation$ gcloud compute ssh --zone us-central1-b kubernetes-node-2
+me@workstation$ gcloud compute ssh --zones us-central1-b kubernetes-node-2
 
 $ sudo docker ps
 CONTAINER ID        IMAGE                             COMMAND     CREATED       STATUS      PORTS   NAMES

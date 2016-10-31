@@ -52,7 +52,7 @@ func masterUpgradeGKE(v string) error {
 	_, _, err := RunCmd("gcloud", "container",
 		"clusters",
 		fmt.Sprintf("--project=%s", TestContext.CloudConfig.ProjectID),
-		fmt.Sprintf("--zone=%s", TestContext.CloudConfig.Zone),
+		fmt.Sprintf("--zones=%s", TestContext.CloudConfig.Zone),
 		"upgrade",
 		TestContext.CloudConfig.Cluster,
 		"--master",
@@ -123,7 +123,7 @@ func nodeUpgradeGKE(v string, img string) error {
 		"container",
 		"clusters",
 		fmt.Sprintf("--project=%s", TestContext.CloudConfig.ProjectID),
-		fmt.Sprintf("--zone=%s", TestContext.CloudConfig.Zone),
+		fmt.Sprintf("--zones=%s", TestContext.CloudConfig.Zone),
 		"upgrade",
 		TestContext.CloudConfig.Cluster,
 		fmt.Sprintf("--cluster-version=%s", v),
@@ -207,7 +207,7 @@ func MigTemplate() (string, error) {
 		output, _, err := retryCmd("gcloud", "compute", "instance-groups", "managed",
 			fmt.Sprintf("--project=%s", TestContext.CloudConfig.ProjectID),
 			"describe",
-			fmt.Sprintf("--zone=%s", TestContext.CloudConfig.Zone),
+			fmt.Sprintf("--zones=%s", TestContext.CloudConfig.Zone),
 			TestContext.CloudConfig.NodeInstanceGroup)
 		if err != nil {
 			errLast = fmt.Errorf("gcloud compute instance-groups managed describe call failed with err: %v", err)

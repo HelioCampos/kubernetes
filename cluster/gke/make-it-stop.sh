@@ -59,7 +59,7 @@ migs=$(${gcloud} compute instance-groups managed list --project=${PROJECT} --zon
 echo "Managed instance groups for cluster ${cluster_name}: ${migs}"
 for mig in ${migs}; do
 	echo "Resizing ${mig}..."
-	${gcloud} compute instance-groups managed resize --project="${PROJECT}" --zone="${zone}" "${mig}" --size=1
+	${gcloud} compute instance-groups managed resize --project="${PROJECT}" --zones="${zone}" "${mig}" --size=1
 done
 
 echo "All managed instance groups resized to 1. Cluster creation operation should end soon, and you will be be able to delete the cluster."

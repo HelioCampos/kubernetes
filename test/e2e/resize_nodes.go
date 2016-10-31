@@ -74,7 +74,7 @@ func ResizeGroup(group string, size int32) error {
 		// TODO: make gce/gke implement InstanceGroups, so we can eliminate the per-provider logic
 		output, err := exec.Command("gcloud", "compute", "instance-groups", "managed", "resize",
 			group, fmt.Sprintf("--size=%v", size),
-			"--project="+framework.TestContext.CloudConfig.ProjectID, "--zone="+framework.TestContext.CloudConfig.Zone).CombinedOutput()
+			"--project="+framework.TestContext.CloudConfig.ProjectID, "--zones="+framework.TestContext.CloudConfig.Zone).CombinedOutput()
 		if err != nil {
 			framework.Logf("Failed to resize node instance group: %v", string(output))
 		}
@@ -93,7 +93,7 @@ func GetGroupNodes(group string) ([]string, error) {
 		// TODO: make gce/gke implement InstanceGroups, so we can eliminate the per-provider logic
 		output, err := exec.Command("gcloud", "compute", "instance-groups", "managed",
 			"list-instances", group, "--project="+framework.TestContext.CloudConfig.ProjectID,
-			"--zone="+framework.TestContext.CloudConfig.Zone).CombinedOutput()
+			"--zones="+framework.TestContext.CloudConfig.Zone).CombinedOutput()
 		if err != nil {
 			return nil, err
 		}
@@ -114,7 +114,7 @@ func GroupSize(group string) (int, error) {
 		// TODO: make gce/gke implement InstanceGroups, so we can eliminate the per-provider logic
 		output, err := exec.Command("gcloud", "compute", "instance-groups", "managed",
 			"list-instances", group, "--project="+framework.TestContext.CloudConfig.ProjectID,
-			"--zone="+framework.TestContext.CloudConfig.Zone).CombinedOutput()
+			"--zones="+framework.TestContext.CloudConfig.Zone).CombinedOutput()
 		if err != nil {
 			return -1, err
 		}

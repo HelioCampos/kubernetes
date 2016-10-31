@@ -333,7 +333,7 @@ func enableAutoscaler(nodePool string, minCount, maxCount int) error {
 			"--max-nodes="+strconv.Itoa(maxCount),
 			"--node-pool="+nodePool,
 			"--project="+framework.TestContext.CloudConfig.ProjectID,
-			"--zone="+framework.TestContext.CloudConfig.Zone).Output()
+			"--zones="+framework.TestContext.CloudConfig.Zone).Output()
 
 		if err != nil {
 			return fmt.Errorf("Failed to enable autoscaling: %v", err)
@@ -379,7 +379,7 @@ func disableAutoscaler(nodePool string, minCount, maxCount int) error {
 			"--no-enable-autoscaling",
 			"--node-pool="+nodePool,
 			"--project="+framework.TestContext.CloudConfig.ProjectID,
-			"--zone="+framework.TestContext.CloudConfig.Zone).Output()
+			"--zones="+framework.TestContext.CloudConfig.Zone).Output()
 
 		if err != nil {
 			return fmt.Errorf("Failed to enable autoscaling: %v", err)
@@ -419,7 +419,7 @@ func addNodePool(name string, machineType string, numNodes int) {
 		"--machine-type="+machineType,
 		"--num-nodes="+strconv.Itoa(numNodes),
 		"--project="+framework.TestContext.CloudConfig.ProjectID,
-		"--zone="+framework.TestContext.CloudConfig.Zone,
+		"--zones="+framework.TestContext.CloudConfig.Zone,
 		"--cluster="+framework.TestContext.CloudConfig.Cluster).CombinedOutput()
 	framework.ExpectNoError(err)
 	glog.Infof("Creating node-pool %s: %s", name, output)
@@ -429,7 +429,7 @@ func deleteNodePool(name string) {
 	glog.Infof("Deleting node pool %s", name)
 	output, err := exec.Command("gcloud", "alpha", "container", "node-pools", "delete", name, "--quiet",
 		"--project="+framework.TestContext.CloudConfig.ProjectID,
-		"--zone="+framework.TestContext.CloudConfig.Zone,
+		"--zones="+framework.TestContext.CloudConfig.Zone,
 		"--cluster="+framework.TestContext.CloudConfig.Cluster).CombinedOutput()
 	if err != nil {
 		glog.Infof("Error: %v", err)

@@ -140,8 +140,8 @@ in the `us-central1-b` zone, as seen in the
 [gce-volumes.yaml](gce-volumes.yaml).
 
 ```shell
-gcloud compute disks create --size=20GB --zone=<zone> wordpress-1
-gcloud compute disks create --size=20GB --zone=<zone> wordpress-2
+gcloud compute disks create --size=20GB --zones=<zone> wordpress-1
+gcloud compute disks create --size=20GB --zones=<zone> wordpress-2
 ```
 
 Create the persistent volume objects in Kubernetes for those disks:

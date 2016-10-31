@@ -55,10 +55,10 @@ Use the `examples/guestbook-go/redis-master-controller.json` file to create a [r
 
     Result: You'll see a single Redis master pod and the machine where the pod is running after the pod gets placed (may take up to thirty seconds).
 
-4. To verify what containers are running in the redis-master pod, you can SSH to that machine with `gcloud compute ssh --zone` *`zone_name`* *`host_name`* and then run `docker ps`:
+4. To verify what containers are running in the redis-master pod, you can SSH to that machine with `gcloud compute ssh --zones` *`zone_name`* *`host_name`* and then run `docker ps`:
 
     ```console
-    me@workstation$ gcloud compute ssh --zone us-central1-b kubernetes-node-bz1p
+    me@workstation$ gcloud compute ssh --zones us-central1-b kubernetes-node-bz1p
     
     me@kubernetes-node-3:~$ sudo docker ps
     CONTAINER ID        IMAGE     COMMAND                  CREATED             STATUS

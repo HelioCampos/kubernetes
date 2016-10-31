@@ -74,7 +74,7 @@ done
 rm kubemark
 cd $CURR_DIR
 
-GCLOUD_COMMON_ARGS="--project ${PROJECT} --zone ${ZONE}"
+GCLOUD_COMMON_ARGS="--project ${PROJECT} --zones ${ZONE}"
 
 run-gcloud-compute-with-retries disks create "${MASTER_NAME}-pd" \
   ${GCLOUD_COMMON_ARGS} \
@@ -117,13 +117,13 @@ echo "${CA_CERT_BASE64}" | base64 --decode > "${RESOURCE_DIRECTORY}/ca.crt"
 echo "${KUBECFG_CERT_BASE64}" | base64 --decode > "${RESOURCE_DIRECTORY}/kubecfg.crt"
 echo "${KUBECFG_KEY_BASE64}" | base64 --decode > "${RESOURCE_DIRECTORY}/kubecfg.key"
 
-until gcloud compute ssh --zone="${ZONE}" --project="${PROJECT}" "${MASTER_NAME}" --command="ls" &> /dev/null; do
+until gcloud compute ssh --zones="${ZONE}" --project="${PROJECT}" "${MASTER_NAME}" --command="ls" &> /dev/null; do
   sleep 1
 done
 
 password=$(python -c 'import string,random; print("".join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(16)))')
 
-gcloud compute ssh --zone="${ZONE}" --project="${PROJECT}" "${MASTER_NAME}" \
+gcloud compute ssh --zones="${ZONE}" --project="${PROJECT}" "${MASTER_NAME}" \
   --command="sudo mkdir /srv/kubernetes -p && \
     sudo bash -c \"echo ${MASTER_CERT_BASE64} | base64 --decode > /srv/kubernetes/server.cert\" && \
     sudo bash -c \"echo ${MASTER_KEY_BASE64} | base64 --decode > /srv/kubernetes/server.key\" && \
@@ -137,7 +137,7 @@ gcloud compute ssh --zone="${ZONE}" --project="${PROJECT}" "${MASTER_NAME}" \
 
 writeEnvironmentFiles
 
-gcloud compute copy-files --zone="${ZONE}" --project="${PROJECT}" \
+gcloud compute copy-files --zones="${ZONE}" --project="${PROJECT}" \
   "${SERVER_BINARY_TAR}" \
   "${KUBEMARK_DIRECTORY}/start-kubemark-master.sh" \
   "${KUBEMARK_DIRECTORY}/configure-kubectl.sh" \
@@ -146,7 +146,7 @@ gcloud compute copy-files --zone="${ZONE}" --project="${PROJECT}" \
   "${RESOURCE_DIRECTORY}/controllers_flags" \
   "${MASTER_NAME}":~
 
-gcloud compute ssh "${MASTER_NAME}" --zone="${ZONE}" --project="${PROJECT}" \
+gcloud compute ssh "${MASTER_NAME}" --zones="${ZONE}" --project="${PROJECT}" \
   --command="chmod a+x configure-kubectl.sh && chmod a+x start-kubemark-master.sh && \
              sudo ./start-kubemark-master.sh ${EVENT_STORE_IP:-127.0.0.1} ${NUM_NODES:-0} ${TEST_ETCD_VERSION:-}"
 

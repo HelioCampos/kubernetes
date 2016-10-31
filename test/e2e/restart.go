@@ -170,7 +170,7 @@ func restartNodes(f *framework.Framework, nodeNames []string) error {
 		"reset",
 	}
 	args = append(args, nodeNames...)
-	args = append(args, fmt.Sprintf("--zone=%s", framework.TestContext.CloudConfig.Zone))
+	args = append(args, fmt.Sprintf("--zones=%s", framework.TestContext.CloudConfig.Zone))
 	stdout, stderr, err := framework.RunCmd("gcloud", args...)
 	if err != nil {
 		return fmt.Errorf("error restarting nodes: %s\nstdout: %s\nstderr: %s", err, stdout, stderr)

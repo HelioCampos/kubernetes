@@ -85,7 +85,7 @@ In the above example, it is using a "gcePersistentDisk" to back the storage. Thi
 If you don't already have a [Google Persistent Disk](https://cloud.google.com/compute/docs/disks) created in the same zone as your cluster, create a new disk in the same Google Compute Engine / Container Engine zone as your cluster with this command:
 
 ```sh
-gcloud compute disks create --size=200GB --zone=$ZONE mongo-disk
+gcloud compute disks create --size=200GB --zones=$ZONE mongo-disk
 ```
 
 If you are using AWS, replace the "volumes" section with this (untested):

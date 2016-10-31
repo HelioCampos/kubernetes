@@ -132,7 +132,7 @@ if [ $remote = true ] ; then
   echo "Instance Metadata: $metadata"
   # Invoke the runner
   go run test/e2e_node/runner/remote/run_remote.go  --logtostderr --vmodule=*=4 --ssh-env="gce" \
-    --zone="$zone" --project="$project" --gubernator="$gubernator" \
+    --zones="$zone" --project="$project" --gubernator="$gubernator" \
     --hosts="$hosts" --images="$images" --cleanup="$cleanup" \
     --results-dir="$artifacts" --ginkgo-flags="$ginkgoflags" \
     --image-project="$image_project" --instance-name-prefix="$instance_prefix" --setup-node="true" \

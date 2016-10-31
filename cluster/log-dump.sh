@@ -97,7 +97,7 @@ function copy-logs-from-node() {
     else
       case "${KUBERNETES_PROVIDER}" in
         gce|gke|kubemark)
-          gcloud compute copy-files --project "${PROJECT}" --zone "${ZONE}" "${node}:${scp_files}" "${dir}" > /dev/null || true
+          gcloud compute copy-files --project "${PROJECT}" --zones "${ZONE}" "${node}:${scp_files}" "${dir}" > /dev/null || true
           ;;
         aws)
           local ip=$(get_ssh_hostname "${node}")
